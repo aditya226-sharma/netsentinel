@@ -21,3 +21,6 @@ dashboard/frontend/dist/
 *.sqlite
 *.sqlite3
 .claude/
+data/
+*.db-shm
+*.db-wal
