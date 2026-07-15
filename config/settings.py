@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Any
 
 import yaml
-from passlib.hash import bcrypt
+import bcrypt
 
 from utils.logger import setup_logger
 
@@ -304,7 +304,9 @@ def _generate_defaults(config: Config) -> Config:
         logger.info("Generated random auth secret key")
 
     if not config.auth.password_hash:
-        updates["password_hash"] = bcrypt.hash("admin")
+        updates["password_hash"] = bcrypt.hashpw(
+            b"admin", bcrypt.gensalt()
+        ).decode("utf-8")
         logger.info("Generated default password hash for user 'admin'")
 
     if updates:

@@ -123,7 +123,7 @@ def start(
         dns_analytics = DNSAnalytics(db_manager)
         traffic_stats = TrafficStats(db_manager, interface=capture_iface)
         alert_engine = AlertEngine(db_manager, config)
-        certificate_inspector = CertificateInspector()
+        certificate_inspector = CertificateInspector(db_manager)
         flow_monitor = FlowMonitor(db_manager)
         plugin_loader = PluginLoader(config.plugins.directory, db_manager)
 

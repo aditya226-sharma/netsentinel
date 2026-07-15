@@ -12,7 +12,7 @@ from typing import Any
 from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jose import JWTError, jwt
-from passlib.hash import bcrypt
+import bcrypt
 
 from config.settings import get_config
 from utils.logger import setup_logger
@@ -84,7 +84,8 @@ def authenticate_user(username: str, password: str) -> bool:
     config = get_config()
     if username != config.auth.username:
         return False
-    return bcrypt.verify(password, config.auth.password_hash)
+    stored_hash = config.auth.password_hash.encode("utf-8")
+    return bcrypt.checkpw(password.encode("utf-8"), stored_hash)
 
 
 async def get_current_user(
