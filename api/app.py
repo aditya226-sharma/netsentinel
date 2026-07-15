@@ -14,8 +14,9 @@ from typing import Any, Optional
 
 from fastapi import FastAPI, WebSocketDisconnect, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, JSONResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
+from starlette.middleware.base import BaseHTTPMiddleware
 
 from config.settings import get_config
 from database.db_manager import DatabaseManager
@@ -70,7 +71,7 @@ class AppState:
 # ------------------------------------------------------------------
 
 def _create_spa_fallback(app: FastAPI) -> None:
-    """Mount ``/`` to serve the React build with SPA index.html fallback.
+    """Mount static assets and add middleware to serve the React build.
 
     If the ``dashboard/frontend/dist`` directory does not exist the
     mount is silently skipped so the API remains functional during
@@ -95,13 +96,20 @@ def _create_spa_fallback(app: FastAPI) -> None:
             name="static-assets",
         )
 
-    # Catch-all: serve index.html for unknown paths (SPA routing)
-    @app.get("/{full_path:path}", include_in_schema=False)
-    async def _spa_fallback(full_path: str) -> FileResponse:
-        file = DASHBOARD_DIST / full_path
-        if file.is_file():
-            return FileResponse(str(file))
-        return FileResponse(str(index_path))
+    class SPAMiddleware(BaseHTTPMiddleware):
+        async def dispatch(self, request: Request, call_next):
+            response = await call_next(request)
+            # Only intercept 404s for non-API routes
+            if response.status_code == 404:
+                path = request.url.path
+                if not path.startswith("/api/") and path != "/ws":
+                    return HTMLResponse(
+                        content=index_path.read_text(encoding="utf-8"),
+                        status_code=200,
+                    )
+            return response
+
+    app.add_middleware(SPAMiddleware)
 
 
 # ------------------------------------------------------------------
