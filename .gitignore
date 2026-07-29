@@ -24,3 +24,8 @@ dashboard/frontend/dist/
 data/
 *.db-shm
 *.db-wal
+.DS_Store
+*.swp
+*.swo
+*~
+*.bak
